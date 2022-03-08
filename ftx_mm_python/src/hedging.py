@@ -42,10 +42,6 @@ dict_hedging_market = {"SOL-PERP": "SOL/USD"}
 MARKET = "SOL-PERP"
 MARKET_HEDGING = dict_hedging_market.get(MARKET)
 COIN_HEDGED = MARKET_HEDGING.split("/")[0]
-# DEPTH = 10
-# SIZE = 0.05 # in native units (ie: 1 => 1 sol)
-# EDGE_BPS = 0
-# EDGE_PCT = EDGE_BPS / (10000 * 2)
 PLACE_TRADES = True
 MIN_HEDGE_ORDER_SIZE_ALLOWED = 0.01
 SLEEP_SECONDS = 3
@@ -74,11 +70,6 @@ while True:
     hedge_coin_net_position = wallet_balances[hedge_coin_index]['total']
     pending_orders_net_size_hedge = calc_net_position_open_orders(open_orders_hedge)
     diff_pos_size = perp_net_position + hedge_coin_net_position + pending_orders_net_size_hedge
-
-    # print(current_positions)
-    # print(hedge_coin_order_book)
-    # print(wallet_balances[hedge_coin_index])
-    # print(open_orders_hedge)
 
     # if not execution_price_hedge:
     top_of_book_bid_px = hedge_coin_order_book['bids'][0][0]
