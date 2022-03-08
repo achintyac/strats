@@ -1,0 +1,6 @@
+ciso8601==2.2.0
+gevent==1.4.0
+pandas==0.25.1
+python-dotenv==0.19.2
+requests==2.22.0
+websocket_client==1.2.3
