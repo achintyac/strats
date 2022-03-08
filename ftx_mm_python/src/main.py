@@ -58,10 +58,6 @@ def calc_net_position_incl_open_orders(positions):
     open_orders_net_position = positions['longOrderSize'] - positions['shortOrderSize']
     return realized_book_net_position, open_orders_net_position
 
-# {'future': 'SOL-PERP', 'size': 0.44, 'side': 'sell', 'netSize': -0.44, 'longOrderSize': 0.94, 'shortOrderSize': 0.5, 'cost': -38.9048, 'entryPrice': 88.42, 'unrealizedPnl': 0.0, 'realizedPnl': -1154.43162786, 'initialMarginRequirement': 0.33333333, 'maintenanceMarginRequirement': 0.03, 'openSize': 0.94, 'collateralUsed': 27.704933056284, 'estimatedLiquidationPrice': 2129.4708264318183, 'recentAverageOpenPrice': 88.2975, 'recentPnl': -0.0539, 'recentBreakEvenPrice': 88.2975, 'cumulativeBuySize': 0.0, 'cumulativeSellSize': 0.44}
-
-
-
 while True:
     order_book = ftx_client.get_orderbook(MARKET, DEPTH)
     open_orders = ftx_client.get_open_orders(MARKET)
@@ -98,38 +94,6 @@ while True:
             ftx_client.cancel_orders(MARKET)
             break
 
-    # # on a big market spike the REST API can lag so we check to make sure positions
-    # # and open orders balance and place balancing trades if needed
-    # realized_net_position, open_orders_net_position = calc_net_position_incl_open_orders(current_positions)
-    # if realized_net_position + open_orders_net_position == 0:
-    #     pass
-    # else:
-    #     if realized_net_position < open_orders_net_position:
-    #         diff_size = open_orders_net_position - realized_net_position
-    #
-    #         ftx_client.place_order(market=MARKET,
-    #                                side="sell",
-    #                                price=current_positions['recentBreakEvenPrice']*(1+EDGE_PCT),
-    #                                size=diff_size,
-    #                                type="limit",
-    #                                reduce_only=False,
-    #                                ioc=False,
-    #                                post_only=True,
-    #                                )
-    #
-    #     else:
-    #         diff_size = realized_net_position - open_orders_net_position
-    #
-    #         ftx_client.place_order(market=MARKET,
-    #                                side="buy",
-    #                                price=current_positions['recentBreakEvenPrice']*(1-EDGE_PCT),
-    #                                size=diff_size,
-    #                                type="limit",
-    #                                reduce_only=False,
-    #                                ioc=False,
-    #                                post_only=True,
-    #                                )
-
     # post new orders if we get filled on one side
     if ((MAX_ORDERS * SIZE) >= current_positions['size']) and ((MAX_ORDERS-2) >= len(open_orders)) and PLACE_TRADES:
         top_of_book_bid_px = order_book['bids'][0][0]
@@ -161,12 +125,7 @@ while True:
         print('buy at {} and sell at {}'.format(bid_side_limit_px*(1-EDGE_PCT), ask_side_limit_px*(1+EDGE_PCT)))
 
         # time.sleep(0.1)
-        # open_orders = ftx_client.get_open_orders(MARKET)
-        # current_positions = ftx_client.get_position(MARKET)
         order_history = ftx_client.get_order_history(MARKET)
-
-        # print(current_positions)
-        # print(order_history)
 
         # when 1 order gets cancelled on postOnly, prevents posting when market moving
         prev_order_1 = order_history[0]
@@ -176,8 +135,6 @@ while True:
         print(prev_order_1)
         print(prev_order_2)
 
-        # if is_cancelled_order(prev_order_1) and is_cancelled_order(prev_order_2):
-        #     pass
         if is_cancelled_order(prev_order_1) and not is_cancelled_order(prev_order_2):
             print('cancelled previous order 2')
             try:
