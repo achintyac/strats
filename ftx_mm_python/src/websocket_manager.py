@@ -1,10 +1,9 @@
 import json
 import time
 from threading import Thread, Lock
-
 from websocket import WebSocketApp
 
-
+# from https://github.com/ftexchange/ftx
 class WebsocketManager:
     _CONNECT_TIMEOUT_S = 5
 
