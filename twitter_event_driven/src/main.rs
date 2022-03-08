@@ -39,8 +39,8 @@ async fn main() {
             .body(
                 r#"{
                   "add": [
-                    {"value": "-is:retweet (from:JumpCryptoHQ OR from:zhusu OR from:CanteringClark OR from:SBF_FTX OR from:JackNiewold OR from:chinterss)",
-                    "tag": "crypto baddies"}
+                    {"value": "-is:retweet (from:JumpCryptoHQ OR from:zhusu OR from:CanteringClark OR from:SBF_FTX OR from:JackNiewold)",
+                    "tag": "crypto_influencers"}
                   ]
                 }"#,
             )
@@ -75,8 +75,7 @@ async fn main() {
     if GET_FULL_HISTORY_FOR_TARGET_USERS {
         println!("GETTING FULL TWEET HISTORY FOR TARGET USERS!");
         let mut user_ids: HashMap<String, twitter::User> = HashMap::new();
-        // let target_users = ["JumpCryptoHQ", "zhusu", "CanteringClark", "SBF_FTX", "JackNiewold", "chinterss"];
-        let target_users = ["chinterss"];
+        let target_users = ["JumpCryptoHQ", "zhusu", "CanteringClark", "SBF_FTX", "JackNiewold"];
 
         for user in target_users {
             let response = twitter::get_response(&client,
