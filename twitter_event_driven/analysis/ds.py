@@ -24,7 +24,5 @@ print(df_hist_tweets)
 # get historical spot
 security = "SOL"
 index_hist = ftx_client._get(path=f"/markets/{security}/USD/candles?resolution=15")
-# df_index_hist = pd.DataFrame(index_hist)
-# df_index_hist.drop(columns=['time', 'open','volume'], inplace=True)
-# print(FtxClient.get_historical_prices("BTC/USD"))
-print(index_hist)
+
+# TODO: paginate historical data from FTX API to build tweet classifier model
