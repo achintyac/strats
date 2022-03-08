@@ -6,10 +6,9 @@ from collections import defaultdict, deque
 from itertools import zip_longest
 from typing import DefaultDict, Deque, List, Dict, Tuple, Optional
 from gevent.event import Event
-
 from websocket_manager import WebsocketManager
 
-
+# from https://github.com/ftexchange/ftx
 class FtxWebsocketClient(WebsocketManager):
     _ENDPOINT = 'wss://ftx.com/ws/'
 
