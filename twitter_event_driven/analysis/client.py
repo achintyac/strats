@@ -5,6 +5,7 @@ from requests import Request, Session, Response
 import hmac
 from ciso8601 import parse_datetime
 
+# FROM https://github.com/ftexchange/ftx/blob/master/rest/client.py
 class FtxClient:
     _ENDPOINT = 'https://ftx.com/api/'
 
