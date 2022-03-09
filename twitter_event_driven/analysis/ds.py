@@ -8,6 +8,14 @@ import requests
 
 load_dotenv()
 FILE_PATH_HIST = os.getenv('FILE_PATH_HIST')
+FILE_PATH_PRICE_HIST = os.getenv('FILE_PATH_PRICE_HIST')
+MAX_TIME_COVER_FOR_15_RESOLUTION = 22470000.0 # FTX timestamps in milliseconds
+MIN_RESOLUTION = 15
+RESOLUTION = 60
+TIME_DIFF_BETWEEN_RESPONSES = RESOLUTION * 1000
+TIME_DIFF_BETWEEN_START_AND_END = MAX_TIME_COVER_FOR_15_RESOLUTION * (RESOLUTION / MIN_RESOLUTION) # time differential between start and end times based on user determined resolution
+TIME_ADJ_IN_HOURS = 8
+GET_HISTORY = False
 
 ftx_client = FtxClient()
 
@@ -16,13 +24,53 @@ def convert_date_format(df):
     df_hist_tweets.DATE = np.array(df_hist_tweets.DATE.str[:-1].values, dtype="datetime64")
     return df_hist_tweets
 
+def calc_time_params_for_pagination(ftx_api_response):
+    start_time_of_request = ftx_api_response[0]["time"]
+    start_time_for_next_request = start_time_of_request - TIME_DIFF_BETWEEN_RESPONSES - TIME_DIFF_BETWEEN_START_AND_END
+    end_time_for_next_request = start_time_of_request - TIME_DIFF_BETWEEN_RESPONSES
+    return start_time_of_request, start_time_for_next_request, end_time_for_next_request
+
+# FTX API converts api inputs from ms to s
+def convert_time_for_pagination(time_stamp):
+    return int(time_stamp / 1000)
+
 # tweet times from csv are in UTC
 df_hist_tweets = pd.read_csv(FILE_PATH_HIST, engine="python", names=["TWEET", "TWEET_ID", "USER", "DATE", "RULE"])
 df_hist_tweets = convert_date_format(df_hist_tweets)
-print(df_hist_tweets)
+# print(df_hist_tweets)
 
 # get historical spot
-security = "SOL"
-index_hist = ftx_client._get(path=f"/markets/{security}/USD/candles?resolution=15")
+securities_lst = ["SOL", "BTC", "ETH", "LUNA", "AVAX", "FTM", "ADA", "DOT"]
+df_hist_prices = pd.DataFrame()
 
-# TODO: paginate historical data from FTX API to build tweet classifier model
+for security in securities_lst:
+    i = 0
+    while i < 10 and GET_HISTORY:
+        if i == 0:
+            index_hist = ftx_client.get_historical_prices(security, RESOLUTION)
+
+        else:
+            index_hist = ftx_client.get_historical_prices(security,
+                                                          RESOLUTION,
+                                                          convert_time_for_pagination(start_time_for_next_request),
+                                                          convert_time_for_pagination(end_time_for_next_request))
+
+        start_time_of_request, start_time_for_next_request, end_time_for_next_request = calc_time_params_for_pagination(index_hist)
+
+        df_prices = pd.DataFrame(index_hist)
+        df_prices["currency"] = security
+        df_prices.startTime = np.array(df_prices.startTime.values, dtype="datetime64") - np.timedelta64(TIME_ADJ_IN_HOURS, 'h')
+        df_hist_prices = pd.concat([df_hist_prices, df_prices])
+        # print("start time for current request: ", int(start_time_of_request/1000))
+        # print("start time for next request: ", int(start_time_for_next_request/1000))
+        # print("end time for next request: ", int(end_time_for_next_request/1000))
+        # print(df_hist_prices)
+        i += 1
+
+try:
+    df_hist_prices = df_hist_prices.drop(columns=["volume"]) \
+                                    .sort_values(by=["startTime"]) \
+                                    .reset_index(drop=True)
+    df_hist_prices.to_csv(FILE_PATH_PRICE_HIST)
+except Exception as e:
+    print("The following error happened in df cleaning/writing: ", e)
