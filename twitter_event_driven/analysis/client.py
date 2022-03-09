@@ -44,8 +44,8 @@ class FtxClient:
     def get_orderbook(self, market: str, depth: int = None) -> dict:
         return self._get(f'markets/{market}/orderbook', {'depth': depth})
 
-    def get_historical_prices(self, market: str = None) -> dict:
-        return self._get(f'/markets/{market}')
+    def get_historical_prices(self, market: str = None, resolution: int = None, start_time: int = None, end_time: int = None) -> dict:
+        return self._get(f"/indexes/{market}/candles?", {'resolution': resolution, 'start_time': start_time, 'end_time': end_time})
 
 
     # def _post(self, path: str, params: Optional[Dict[str, Any]] = None) -> Any:
