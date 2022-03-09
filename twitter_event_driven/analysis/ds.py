@@ -15,15 +15,15 @@ RESOLUTION = 60
 TIME_DIFF_BETWEEN_RESPONSES = RESOLUTION * 1000
 TIME_DIFF_BETWEEN_START_AND_END = MAX_TIME_COVER_FOR_15_RESOLUTION * (RESOLUTION / MIN_RESOLUTION) # time differential between start and end times based on user determined resolution
 TIME_ADJ_IN_HOURS = 8
-RECORD_HISTORY = True
-READ_HISTORY = False
+RECORD_HISTORY = False
+READ_HISTORY = True
 
 ftx_client = FtxClient()
 
 # removes Z from ISO string which indicates times are in UTC
 def convert_date_format(df):
-    df_hist_tweets.DATE = np.array(df_hist_tweets.DATE.str[:-1].values, dtype="datetime64")
-    return df_hist_tweets
+    df.DATE = np.array(df.DATE.str[:-1].values, dtype="datetime64")
+    return df
 
 def calc_time_params_for_pagination(ftx_api_response):
     start_time_of_request = ftx_api_response[0]["time"]
@@ -35,17 +35,13 @@ def calc_time_params_for_pagination(ftx_api_response):
 def convert_time_for_pagination(time_stamp):
     return int(time_stamp / 1000)
 
-# tweet times from csv are in UTC
-df_hist_tweets = pd.read_csv(FILE_PATH_HIST, engine="python", names=["TWEET", "TWEET_ID", "USER", "DATE", "RULE"])
-df_hist_tweets = convert_date_format(df_hist_tweets)
-
 securities_lst = ["SOL", "BTC", "ETH", "LUNA", "AVAX", "FTM", "ADA", "DOT"]
 df_hist_prices = pd.DataFrame()
 
 if RECORD_HISTORY:
     for security in securities_lst:
         i = 0
-        while i < 100:
+        while i < 120:
             if i == 0:
                 index_hist = ftx_client.get_historical_prices(security, RESOLUTION)
             else:
@@ -70,7 +66,22 @@ if RECORD_HISTORY:
         df_hist_prices = df_hist_prices.drop(columns=["volume"]) \
                                         .sort_values(by=["startTime"]) \
                                         .reset_index(drop=True)
-        df_hist_prices.to_csv(FILE_PATH_PRICE_HIST)
+        df_hist_prices.to_csv(FILE_PATH_PRICE_HIST, index=False)
         print("csv save succesful to: ", FILE_PATH_PRICE_HIST)
     except Exception as e:
         print("The following error happened in df cleaning/writing: ", e)
+
+
+if READ_HISTORY:
+    try:
+        df_price_history = pd.read_csv(FILE_PATH_PRICE_HIST)
+
+        # tweet times from csv are in UTC
+        df_tweet_history = pd.read_csv(FILE_PATH_HIST, engine="python", names=["TWEET", "TWEET_ID", "USER", "DATE", "RULE"])
+        df_tweet_history = convert_date_format(df_tweet_history)
+
+        print(df_price_history)
+        print(df_tweet_history)
+
+    except Exception as e:
+        print("Encountered following error when reading csv: ", e)
